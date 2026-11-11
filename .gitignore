@@ -1,0 +1,28 @@
+# Dépendances
+node_modules/
+
+# Builds
+dist/
+build/
+.expo/
+web-build/
+
+# Secrets — ne jamais commiter
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+
+# Système / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Tests
+coverage/
