@@ -6,13 +6,14 @@ Chaque case peut devenir une *issue* GitHub.
 ---
 
 ## Phase 0 — Mise en place du dépôt (semaine 1)
-- [ ] Créer le dépôt GitHub et pousser cette structure
+- [x] Créer le dépôt GitHub et pousser cette structure
 - [ ] Protéger la branche `main` (PR obligatoire, CI verte obligatoire)
-- [ ] Configurer les npm workspaces (monorepo)
-- [ ] CI GitHub Actions : lint + tests à chaque PR
-- [ ] Activer Dependabot, le secret scanning et CodeQL
-- [ ] `docker-compose.yml` avec PostgreSQL
-- [ ] `.env.example` documenté
+- [x] Configurer les npm workspaces (monorepo)
+- [x] CI GitHub Actions : lint + tests à chaque PR (+ détection de secrets avec gitleaks)
+- [x] Dependabot (mises à jour npm + GitHub Actions)
+- [ ] CodeQL : workflow prêt, s'active quand le dépôt passe en public
+- [x] `docker-compose.yml` avec PostgreSQL
+- [x] `.env.example` documenté
 
 **Compétence DevSecOps travaillée :** sécurité de la chaîne CI/CD dès le premier jour.
 
