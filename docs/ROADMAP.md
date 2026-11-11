@@ -18,13 +18,14 @@ Chaque case peut devenir une *issue* GitHub.
 **Compétence DevSecOps travaillée :** sécurité de la chaîne CI/CD dès le premier jour.
 
 ## Phase 1 — Backend et authentification (semaines 2-3)
-- [ ] Initialiser l'API NestJS + Prisma
-- [ ] Modèle `User` avec rôles : `ANALYST`, `CISO` (RSSI), `DPO`, `ADMIN`
-- [ ] Connexion / déconnexion avec JWT (access + refresh token)
-- [ ] Mots de passe hachés (argon2 ou bcrypt)
-- [ ] Contrôle d'accès par rôle (guards NestJS)
-- [ ] Limitation du nombre de tentatives de connexion (rate limiting)
-- [ ] Journal d'audit : qui a fait quoi, quand
+- [x] Initialiser l'API NestJS + base de données (Drizzle ORM : pur TypeScript, aucun binaire natif)
+- [x] Modèle `User` avec rôles : `ANALYST`, `CISO` (RSSI), `DPO`, `ADMIN`
+- [x] Connexion / déconnexion avec JWT (access token court + refresh token avec rotation)
+- [x] Mots de passe hachés (scrypt, sel aléatoire, comparaison en temps constant)
+- [x] Contrôle d'accès par rôle (guards NestJS, refus par défaut)
+- [x] Limitation du nombre de tentatives de connexion (rate limiting)
+- [x] Journal d'audit : qui a fait quoi, quand
+- [x] Tests unitaires (CI) + tests de bout en bout contre PostgreSQL
 - [ ] *(bonus)* MFA par TOTP
 
 ## Phase 2 — Incidents, côté SOC (semaines 4-5)

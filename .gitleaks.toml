@@ -1,0 +1,9 @@
+# Configuration gitleaks : règles par défaut + exceptions documentées.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Mots de passe fictifs utilisés uniquement dans les tests automatisés"
+paths = [
+  '''(^|/)apps/[^/]+/(src|test)/.*\.(spec|e2e-spec)\.ts$''',
+]
