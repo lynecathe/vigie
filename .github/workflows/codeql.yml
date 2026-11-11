@@ -1,0 +1,26 @@
+name: CodeQL
+
+# CodeQL est gratuit sur les dépôts publics. Tant que le dépôt est privé,
+# le job est ignoré (il faudrait GitHub Advanced Security).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1" # chaque lundi
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    if: ${{ !github.event.repository.private }}
+    name: Analyse CodeQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
