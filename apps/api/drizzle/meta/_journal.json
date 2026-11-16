@@ -15,6 +15,20 @@
       "when": 1794832467105,
       "tag": "0001_incidents",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794835128940,
+      "tag": "0002_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794835129649,
+      "tag": "0003_seed_iso27001",
+      "breakpoints": true
     }
   ]
 }

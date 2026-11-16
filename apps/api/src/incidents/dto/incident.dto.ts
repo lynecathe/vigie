@@ -31,6 +31,10 @@ export class CreateIncidentDto {
   @IsBoolean()
   personalData?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  nis2Significant?: boolean;
+
   /** Alertes à rattacher dès la création. */
   @IsOptional()
   @IsArray()
@@ -57,6 +61,11 @@ export class UpdateIncidentDto {
   @IsOptional()
   @IsBoolean()
   personalData?: boolean;
+
+  /** Incident « important » au sens de NIS2 : déclenche les échéances 24 h / 72 h / 1 mois. */
+  @IsOptional()
+  @IsBoolean()
+  nis2Significant?: boolean;
 
   /** Explication obligatoire pour passer à RESOLVED ou CLOSED (traçabilité). */
   @IsOptional()
