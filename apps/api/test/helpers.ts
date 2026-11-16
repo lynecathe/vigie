@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import cookieParser from "cookie-parser";
 import request from "supertest";
 import { createAppModule } from "../src/app.module";
 import { loadEnv } from "../src/config/env";
@@ -9,6 +10,7 @@ import { loadEnv } from "../src/config/env";
 export async function startApp(): Promise<{ app: INestApplication; http: ReturnType<typeof request> }> {
   const moduleRef = await Test.createTestingModule({ imports: [createAppModule(loadEnv())] }).compile();
   const app = moduleRef.createNestApplication();
+  app.use(cookieParser());
   app.setGlobalPrefix("api");
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   await app.init();

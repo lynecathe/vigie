@@ -37,8 +37,11 @@ export class GovernanceController {
     return this.governance.obligationsOf(id, user);
   }
 
-  /** Comptes à rebours en cours, du plus urgent au moins urgent. */
-  @Roles("CISO", "DPO", "ADMIN")
+  /**
+   * Comptes à rebours en cours, du plus urgent au moins urgent.
+   * Lisible par les analystes (le SOC doit voir l'horloge légale), mais canHandle reste faux pour eux.
+   */
+  @Roles(...VIEWER_ROLES)
   @Get("obligations/upcoming")
   upcoming(@CurrentUser() user: AuthUser) {
     return this.governance.upcoming(user);

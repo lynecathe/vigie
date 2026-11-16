@@ -97,13 +97,14 @@ describe("Gouvernance (e2e)", () => {
       expect(mine.incident.ref).toMatch(/^INC-/);
     });
 
-    it("l'analyste ne peut ni décider ni voir les comptes à rebours globaux", async () => {
+    it("l'analyste voit les comptes à rebours mais ne peut pas décider", async () => {
       await http
         .post(`/api/incidents/${ids.incident}/obligations/GDPR_NOTIFICATION/decision`)
         .set(auth("analyst"))
         .send({ decision: "NOTIFY" })
         .expect(403);
-      await http.get("/api/obligations/upcoming").set(auth("analyst")).expect(403);
+      const res = await http.get("/api/obligations/upcoming").set(auth("analyst")).expect(200);
+      expect(res.body.every((o: { canHandle: boolean }) => o.canHandle === false)).toBe(true);
     });
 
     it("« non requise » exige une justification (registre des violations)", async () => {

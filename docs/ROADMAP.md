@@ -7,11 +7,11 @@ Chaque case peut devenir une *issue* GitHub.
 
 ## Phase 0 — Mise en place du dépôt (semaine 1)
 - [x] Créer le dépôt GitHub et pousser cette structure
-- [ ] Protéger la branche `main` (PR obligatoire, CI verte obligatoire)
+- [x] Protéger la branche `main` (PR obligatoire, CI verte obligatoire)
 - [x] Configurer les npm workspaces (monorepo)
 - [x] CI GitHub Actions : lint + tests à chaque PR (+ détection de secrets avec gitleaks)
 - [x] Dependabot (mises à jour npm + GitHub Actions)
-- [ ] CodeQL : workflow prêt, s'active quand le dépôt passe en public
+- [x] CodeQL (analyse de code à chaque PR et chaque semaine)
 - [x] `docker-compose.yml` avec PostgreSQL
 - [x] `.env.example` documenté
 
@@ -36,7 +36,7 @@ Chaque case peut devenir une *issue* GitHub.
 - [x] Cycle de vie : nouveau → en analyse → contenu → résolu → clos (note obligatoire pour résoudre/clore)
 - [x] Sévérité (faible / moyenne / élevée / critique) et assignation
 - [x] Droits : le DPO ne voit que les incidents touchant des données personnelles
-- [ ] Web : liste filtrable + page de détail d'un incident avec sa chronologie (avec l'appli web)
+- [x] Web : liste filtrable + page de détail d'un incident avec sa chronologie
 - [ ] Brancher un vrai Wazuh (homelab)
 
 ## Phase 3 — Gouvernance et conformité (semaines 6-7)
@@ -48,11 +48,13 @@ Chaque case peut devenir une *issue* GitHub.
 - [x] Brouillon de notification prérempli à partir de l'incident (CNIL + 3 étapes NIS2)
 - [x] Registre des incidents exportable (JSON / CSV, protégé contre l'injection de formules)
 
-## Phase 4 — Tableaux de bord et rapports (semaine 8)
-- [ ] Indicateurs : MTTA (délai de prise en charge), MTTR (délai de résolution)
-- [ ] Incidents par sévérité et par statut dans le temps
-- [ ] Contrôles ISO les plus touchés
-- [ ] Délais de notification respectés / dépassés
+## Phase 4 — Tableaux de bord et application web (semaine 8)
+- [x] Indicateurs : MTTA (délai de prise en charge), MTTR (délai de résolution) — `GET /api/metrics`
+- [x] Incidents par sévérité et par statut, incidents créés par jour
+- [x] Contrôles ISO les plus touchés
+- [x] Délais de notification respectés / dépassés
+- [x] Application web : connexion, tableau de bord (bandeau « quart en cours » avec les comptes à rebours légaux), incidents, alertes à trier, échéances, registre, comptes
+- [x] Session web sécurisée : refresh token en cookie `HttpOnly` + `SameSite=Strict`, access token en mémoire
 - [ ] Rapport mensuel exportable pour la direction
 
 ## Phase 5 — Application mobile (semaines 9-11)
