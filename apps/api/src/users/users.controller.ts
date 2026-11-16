@@ -14,6 +14,12 @@ export class UsersController {
     return this.users.list();
   }
 
+  @Roles("ANALYST", "CISO", "ADMIN")
+  @Get("assignable")
+  assignable() {
+    return this.users.listAssignable();
+  }
+
   @Post()
   create(@Body() dto: CreateUserDto, @CurrentUser() actor: AuthUser, @Ip() ip: string) {
     return this.users.create(dto, actor.id, ip);

@@ -44,7 +44,15 @@ if (-not (Test-Path "node_modules")) {
 
 # --- 1. Fichier .env -------------------------------------------------------
 if (Test-Path ".env") {
-  Step ".env existe deja : je le garde tel quel"
+  Step ".env existe deja : je le garde"
+  # Ajoute les variables apparues depuis (sans toucher aux valeurs existantes).
+  $envContent = Get-Content ".env" -Encoding UTF8
+  if (-not ($envContent | Where-Object { $_ -match '^ALERTS_WEBHOOK_API_KEY=.+' })) {
+    $newKey = New-RandomHex 32
+    $envContent = @($envContent | Where-Object { $_ -notmatch '^ALERTS_WEBHOOK_API_KEY=' }) + "ALERTS_WEBHOOK_API_KEY=$newKey"
+    [System.IO.File]::WriteAllLines((Join-Path (Get-Location) ".env"), [string[]]$envContent, (New-Object System.Text.UTF8Encoding $false))
+    Write-Host "    Ajout de ALERTS_WEBHOOK_API_KEY (cle du webhook d'alertes)."
+  }
 } else {
   Step "Creation du fichier .env avec des secrets aleatoires"
   $dbPort = @(5432, 5433, 15432, 25432, 35432, 45432) | Where-Object { Test-PortFree $_ } | Select-Object -First 1
@@ -52,11 +60,13 @@ if (Test-Path ".env") {
   if ($dbPort -ne 5432) { Write-Host "    Le port 5432 est indisponible sur ce PC : PostgreSQL utilisera le port $dbPort." }
   $dbPassword = New-RandomHex 16
   $jwtSecret = New-RandomHex 32
+  $webhookKey = New-RandomHex 32
   $content = Get-Content ".env.example" -Encoding UTF8 | ForEach-Object {
     $_ -replace '^POSTGRES_PASSWORD=.*', "POSTGRES_PASSWORD=$dbPassword" `
        -replace '^POSTGRES_PORT=.*', "POSTGRES_PORT=$dbPort" `
        -replace '^DATABASE_URL=.*', "DATABASE_URL=postgresql://vigie:$dbPassword@localhost:$dbPort/vigie" `
        -replace '^JWT_ACCESS_SECRET=.*', "JWT_ACCESS_SECRET=$jwtSecret" `
+       -replace '^ALERTS_WEBHOOK_API_KEY=.*', "ALERTS_WEBHOOK_API_KEY=$webhookKey" `
        -replace '^SEED_ADMIN_PASSWORD=.*', "# SEED_ADMIN_PASSWORD : demande au clavier par scripts/setup-local.ps1"
   }
   # UTF-8 sans BOM (lisible par Node, quelle que soit la version de PowerShell)

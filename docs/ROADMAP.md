@@ -29,13 +29,15 @@ Chaque case peut devenir une *issue* GitHub.
 - [ ] *(bonus)* MFA par TOTP
 
 ## Phase 2 — Incidents, côté SOC (semaines 4-5)
-- [ ] Modèles `Alert`, `Incident`, `Comment`, `TimelineEvent`
-- [ ] Endpoint webhook `POST /api/alerts` protégé par clé d'API
-- [ ] Connecteur Wazuh (alertes au format JSON)
-- [ ] Regrouper plusieurs alertes dans un incident
-- [ ] Cycle de vie : nouveau → en analyse → contenu → résolu → clos
-- [ ] Sévérité (faible / moyenne / élevée / critique) et assignation
-- [ ] Web : liste filtrable + page de détail d'un incident avec sa chronologie
+- [x] Modèles `Alert`, `Incident`, chronologie (`IncidentEvent`, commentaires inclus)
+- [x] Webhook `POST /api/alerts` protégé par clé d'API
+- [x] Format Wazuh reconnu (niveau de règle → sévérité) + format générique
+- [x] Ouverture automatique d'un incident pour les alertes HIGH/CRITICAL, regroupement des alertes semblables, dédoublonnage
+- [x] Cycle de vie : nouveau → en analyse → contenu → résolu → clos (note obligatoire pour résoudre/clore)
+- [x] Sévérité (faible / moyenne / élevée / critique) et assignation
+- [x] Droits : le DPO ne voit que les incidents touchant des données personnelles
+- [ ] Web : liste filtrable + page de détail d'un incident avec sa chronologie (avec l'appli web)
+- [ ] Brancher un vrai Wazuh (homelab)
 
 ## Phase 3 — Gouvernance et conformité (semaines 6-7)
 - [ ] Référentiel de contrôles ISO 27001:2022 (numéros + résumés rédigés par toi)

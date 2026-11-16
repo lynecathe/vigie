@@ -11,6 +11,8 @@ export interface Env {
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
   corsOrigins: string[];
+  /** Clé exigée par le webhook d'alertes. Absente → webhook désactivé. */
+  alertsWebhookApiKey: string | null;
 }
 
 function required(name: string): string {
@@ -24,7 +26,12 @@ export function loadEnv(): Env {
   if (jwtAccessSecret.length < 32) {
     throw new Error("JWT_ACCESS_SECRET doit faire au moins 32 caractères");
   }
+  const alertsWebhookApiKey = process.env.ALERTS_WEBHOOK_API_KEY || null;
+  if (alertsWebhookApiKey && alertsWebhookApiKey.length < 32) {
+    throw new Error("ALERTS_WEBHOOK_API_KEY doit faire au moins 32 caractères");
+  }
   return {
+    alertsWebhookApiKey,
     nodeEnv: process.env.NODE_ENV ?? "development",
     port: Number(process.env.API_PORT ?? 3000),
     databaseUrl: required("DATABASE_URL"),

@@ -35,6 +35,32 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 | GET | `/api/auth/me` | connecté | Profil de l'utilisateur connecté |
 | GET | `/api/users` | ADMIN | Liste des comptes |
 | POST | `/api/users` | ADMIN | Créer un compte (ANALYST, CISO, DPO, ADMIN) |
+| GET | `/api/users/assignable` | ANALYST, CISO, ADMIN | Personnes à qui on peut assigner un incident |
+| POST | `/api/alerts` | clé d'API (`X-API-Key`) | Webhook : reçoit une alerte (format Wazuh ou générique) |
+| GET | `/api/alerts/untriaged` | ANALYST, CISO, ADMIN | File d'attente : alertes sans incident |
+| GET | `/api/incidents` | ANALYST, CISO, DPO\*, ADMIN | Liste filtrable (`status`, `severity`, `assigneeId=me`, `personalData`) |
+| GET | `/api/incidents/:id` | ANALYST, CISO, DPO\*, ADMIN | Détail : alertes, chronologie, transitions possibles |
+| POST | `/api/incidents` | ANALYST, CISO, ADMIN | Créer un incident (avec alertes éventuelles) |
+| PATCH | `/api/incidents/:id` | ANALYST, CISO, ADMIN | Statut, sévérité, assignation, données personnelles |
+| POST | `/api/incidents/:id/comments` | ANALYST, CISO, DPO\*, ADMIN | Commenter |
+| POST | `/api/incidents/:id/alerts` | ANALYST, CISO, ADMIN | Rattacher des alertes |
+
+\* Le DPO ne voit que les incidents qui touchent des données personnelles.
+
+## Incidents
+
+**Cycle de vie** : `NEW` → `IN_PROGRESS` → `CONTAINED` → `RESOLVED` → `CLOSED` (une note est obligatoire pour résoudre ou clore ; seuls le RSSI et l'admin peuvent rouvrir un incident clos).
+
+**Alertes** : une alerte `HIGH` ou `CRITICAL` ouvre automatiquement un incident ; une alerte semblable (même source, même règle, même machine) est regroupée dans l'incident encore ouvert ; les alertes `LOW` et `MEDIUM` vont dans la file d'attente. La même alerte reçue deux fois n'est enregistrée qu'une fois. Sévérité Wazuh : niveau 0-6 → LOW, 7-10 → MEDIUM, 11-13 → HIGH, 14-15 → CRITICAL.
+
+**Chronologie** : chaque création, changement de statut, de sévérité, assignation, rattachement d'alerte et commentaire est horodaté et attribué.
+
+Tester le webhook depuis PowerShell (la clé est dans ton `.env`) :
+
+```powershell
+$key = (Get-Content .env | Select-String '^ALERTS_WEBHOOK_API_KEY=').ToString().Split('=')[1]
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/alerts -Headers @{ 'X-API-Key' = $key } -ContentType 'application/json' -Body '{"source":"demo","externalId":"demo-1","title":"Connexion suspecte","severity":"HIGH","host":"poste-42"}'
+```
 
 ## Choix de sécurité
 
@@ -44,7 +70,8 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 - **Anti brute-force** : 5 tentatives de connexion par minute et par IP ; message d'erreur générique ; temps de réponse identique que l'e-mail existe ou non.
 - **Validation stricte** des entrées : tout champ non prévu est refusé (protection contre le mass assignment).
 - **En-têtes HTTP de sécurité** (Helmet) et CORS limité aux origines configurées.
-- **Journal d'audit** en base et en logs JSON (collectables par un SIEM) : connexions, échecs, déconnexions, réutilisation de jeton, création de comptes.
+- **Journal d'audit** en base et en logs JSON (collectables par un SIEM) : connexions, échecs, déconnexions, réutilisation de jeton, création de comptes, refus du webhook, création et modification d'incidents.
+- **Webhook d'alertes** protégé par une clé d'API comparée en temps constant ; le DPO reçoit une 404 (et non 403) sur les incidents qu'il ne doit pas voir, pour ne pas révéler leur existence.
 - **Configuration validée au démarrage** : l'API refuse de démarrer si un secret manque ou est trop court.
 
 ## Tests

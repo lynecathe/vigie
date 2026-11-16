@@ -7,7 +7,10 @@ export type AuditAction =
   | "LOGIN_FAILURE"
   | "LOGOUT"
   | "REFRESH_TOKEN_REUSE"
-  | "USER_CREATED";
+  | "USER_CREATED"
+  | "ALERT_WEBHOOK_REJECTED"
+  | "INCIDENT_CREATED"
+  | "INCIDENT_UPDATED";
 
 export interface AuditEntry {
   action: AuditAction;
