@@ -30,7 +30,7 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 |---|---|---|---|
 | GET | `/api/health` | public | Vérifier que l'API répond |
 | POST | `/api/auth/login` | public (5 essais/min) | Connexion → access token + refresh token |
-| POST | `/api/auth/refresh` | public | Nouveau couple de jetons (rotation) |
+| POST | `/api/auth/refresh` | public | Nouveau couple de jetons (rotation) ; refresh token dans le corps (mobile) ou dans le cookie `vigie_rt` (web) |
 | POST | `/api/auth/logout` | connecté | Révoque le refresh token |
 | GET | `/api/auth/me` | connecté | Profil de l'utilisateur connecté |
 | GET | `/api/users` | ADMIN | Liste des comptes |
@@ -49,11 +49,12 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 | POST | `/api/controls` | ADMIN | Ajouter un contrôle au référentiel |
 | PUT | `/api/incidents/:id/controls` | ANALYST, CISO, ADMIN | Rattacher des contrôles à un incident |
 | GET | `/api/incidents/:id/obligations` | ANALYST, CISO, DPO\*\*, ADMIN | Obligations réglementaires et comptes à rebours |
-| GET | `/api/obligations/upcoming` | CISO, DPO\*\*, ADMIN | Toutes les échéances en cours, de la plus urgente à la moins urgente |
+| GET | `/api/obligations/upcoming` | ANALYST (lecture), CISO, DPO\*\*, ADMIN | Toutes les échéances en cours, de la plus urgente à la moins urgente |
 | POST | `/api/incidents/:id/obligations/:kind/decision` | DPO (RGPD), CISO, ADMIN | Notifier / non requise (justification obligatoire) |
 | GET | `/api/incidents/:id/obligations/:kind/draft` | DPO (RGPD), CISO, ADMIN | Brouillon de notification prérempli |
 | POST | `/api/incidents/:id/obligations/:kind/submission` | DPO (RGPD), CISO, ADMIN | Déclarer l'envoi (n° de dossier, motif si retard) |
 | GET | `/api/register?format=json\|csv` | CISO, DPO\*, ADMIN | Registre des incidents (preuve d'audit) |
+| GET | `/api/metrics?days=30` | ANALYST, CISO, DPO\*, ADMIN | Indicateurs : incidents ouverts, MTTA, MTTR, incidents par jour, alertes à trier, délais de notification, contrôles les plus touchés |
 
 \* Le DPO ne voit que les incidents qui touchent des données personnelles.
 \*\* Le DPO ne voit que les obligations RGPD.
@@ -90,11 +91,23 @@ $key = (Get-Content .env | Select-String '^ALERTS_WEBHOOK_API_KEY=').ToString().
 Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/alerts -Headers @{ 'X-API-Key' = $key } -ContentType 'application/json' -Body '{"source":"demo","externalId":"demo-1","title":"Connexion suspecte","severity":"HIGH","host":"poste-42"}'
 ```
 
+## Indicateurs
+
+`GET /api/metrics?days=30` (1 à 365 jours) calcule :
+- **MTTA** (délai moyen de prise en charge) : de la création de l'incident à sa première sortie du statut « nouveau » ;
+- **MTTR** (délai moyen de résolution) : de la création au premier passage à « résolu » ;
+- les incidents ouverts par sévérité et par statut, les incidents créés par jour, les alertes à trier ;
+- les notifications en cours, en retard, envoyées à temps ou en retard (taux de respect des délais) ;
+- les 5 contrôles ISO 27001 les plus rattachés.
+
+Le DPO n'obtient que les chiffres des incidents touchant des données personnelles.
+
 ## Choix de sécurité
 
 - **Refus par défaut** : toutes les routes exigent un jeton, sauf celles marquées `@Public()`.
 - **Mots de passe** : hachés avec scrypt (sel aléatoire, comparaison en temps constant), 12 caractères minimum.
 - **Access token** court (15 min) ; **refresh token** stocké uniquement sous forme d'empreinte SHA-256, renouvelé à chaque usage. Réutiliser un ancien refresh token coupe toutes les sessions de l'utilisateur.
+- **Session web** : le navigateur ne voit jamais le refresh token. Quand le client envoie l'en-tête `X-Vigie-Client: web`, l'API le pose dans un cookie `vigie_rt` (`HttpOnly`, `SameSite=Strict`, `Secure` en production, limité à `/api/auth`) au lieu de le renvoyer dans le corps. Le cookie n'est accepté qu'accompagné de cet en-tête, qu'un site tiers ne peut pas ajouter sans déclencher le contrôle CORS (protection CSRF). L'access token reste en mémoire côté web, jamais dans `localStorage`. L'app mobile garde le refresh token dans le corps de la réponse (stocké dans SecureStore).
 - **Anti brute-force** : 5 tentatives de connexion par minute et par IP ; message d'erreur générique ; temps de réponse identique que l'e-mail existe ou non.
 - **Validation stricte** des entrées : tout champ non prévu est refusé (protection contre le mass assignment).
 - **En-têtes HTTP de sécurité** (Helmet) et CORS limité aux origines configurées.

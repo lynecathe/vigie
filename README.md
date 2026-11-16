@@ -59,6 +59,7 @@ vigie/
 ## Démarrage
 
 - API : voir [apps/api/README.md](apps/api/README.md)
+- Application web : voir [apps/web/README.md](apps/web/README.md)
 - Feuille de route : [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## Conventions Git

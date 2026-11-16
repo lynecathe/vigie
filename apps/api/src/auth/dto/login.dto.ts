@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MaxLength } from "class-validator";
+import { IsEmail, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class LoginDto {
   @IsEmail()
@@ -10,8 +10,10 @@ export class LoginDto {
   password: string;
 }
 
+/** Mobile : le refresh token est dans le corps. Web : il est dans un cookie httpOnly (corps vide). */
 export class RefreshDto {
+  @IsOptional()
   @IsString()
   @MaxLength(200)
-  refreshToken: string;
+  refreshToken?: string;
 }

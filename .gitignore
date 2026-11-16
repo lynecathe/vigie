@@ -26,3 +26,6 @@ Thumbs.db
 
 # Tests
 coverage/
+
+# Cache de compilation TypeScript
+*.tsbuildinfo
