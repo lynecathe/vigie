@@ -23,6 +23,10 @@ describe("AlertsApiKeyGuard", () => {
     expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: "ALERT_WEBHOOK_REJECTED" }));
   });
 
+  it("refuse une clé de même longueur mais différente", async () => {
+    await expect(guard.canActivate(ctx("x".repeat(40)))).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
   it("répond 503 si aucune clé n'est configurée", async () => {
     const disabled = new AlertsApiKeyGuard({ alertsWebhookApiKey: null } as Env, audit);
     await expect(disabled.canActivate(ctx(KEY))).rejects.toBeInstanceOf(ServiceUnavailableException);

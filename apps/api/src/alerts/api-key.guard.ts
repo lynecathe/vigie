@@ -1,10 +1,18 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import { AuditService } from "../audit/audit.service";
 import { ENV, Env } from "../config/env";
 
-const digest = (v: string) => createHash("sha256").update(v).digest();
+/**
+ * Comparaison en temps constant, sans hachage : on compare les octets eux-mêmes.
+ * Seule la longueur peut fuiter, ce qui ne révèle rien d'une clé aléatoire de longueur fixe.
+ */
+function safeEqual(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /** Protège le webhook d'alertes par une clé d'API (en-tête X-API-Key), comparée en temps constant. */
 @Injectable()
@@ -20,8 +28,7 @@ export class AlertsApiKeyGuard implements CanActivate {
     }
     const req = context.switchToHttp().getRequest<Request>();
     const provided = req.header("x-api-key") ?? "";
-    // On compare des empreintes de même longueur pour ne rien révéler par le temps de réponse.
-    if (!timingSafeEqual(digest(provided), digest(this.env.alertsWebhookApiKey))) {
+    if (!safeEqual(provided, this.env.alertsWebhookApiKey)) {
       await this.audit.log({ action: "ALERT_WEBHOOK_REJECTED", ip: req.ip });
       throw new UnauthorizedException();
     }
