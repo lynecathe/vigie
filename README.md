@@ -33,7 +33,7 @@ Dans beaucoup d'organisations (PME, entités soumises à NIS2), le SOC et la gou
 | Web | React + Vite + TypeScript | Expérience React existante |
 | Mobile | React Native (Expo) + TypeScript | Réutilisation du code et des compétences React |
 | API | NestJS (Node.js, TypeScript) | Même langage partout, structure claire, guards pour les rôles |
-| Base de données | PostgreSQL + Prisma | Relationnel, migrations versionnées |
+| Base de données | PostgreSQL + Drizzle ORM | Relationnel, migrations SQL versionnées, aucun binaire natif |
 | Auth | JWT + rôles (RBAC), MFA TOTP | Analyste / RSSI / DPO / Admin |
 | Infra locale | Docker Compose | Lancement en une commande |
 | CI/CD | GitHub Actions | Lint, tests, scans de sécurité |
@@ -58,7 +58,8 @@ vigie/
 
 ## Démarrage
 
-*(à compléter au fil du développement — voir [docs/ROADMAP.md](docs/ROADMAP.md))*
+- API : voir [apps/api/README.md](apps/api/README.md)
+- Feuille de route : [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## Conventions Git
 

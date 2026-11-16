@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "127.0.0.1:5432:5432" # exposé uniquement en local
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432" # exposé uniquement en local (port choisi dans .env)
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
