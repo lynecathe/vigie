@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, jsonb, pgEnum, pgTable, serial, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgEnum, pgTable, primaryKey, serial, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 /** Rôles de Vigie : analyste SOC, RSSI, DPO, administrateur. */
 export const roleEnum = pgEnum("role", ["ANALYST", "CISO", "DPO", "ADMIN"]);
@@ -73,6 +73,8 @@ export const incidents = pgTable(
     status: incidentStatusEnum("status").notNull().default("NEW"),
     /** Des données personnelles sont concernées → visible par le DPO, déclenchera le délai CNIL (phase 3). */
     personalData: boolean("personal_data").notNull().default(false),
+    /** Incident « important » au sens de NIS2 (art. 23) → déclenche les échéances 24 h / 72 h / 1 mois. */
+    nis2Significant: boolean("nis2_significant").notNull().default(false),
     assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
     createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
     detectedAt: timestamp("detected_at", { withTimezone: true }).notNull().defaultNow(),
@@ -115,6 +117,10 @@ export const incidentEventTypeEnum = pgEnum("incident_event_type", [
   "PERSONAL_DATA_CHANGED",
   "ALERT_LINKED",
   "COMMENT",
+  "NIS2_CHANGED",
+  "CONTROLS_UPDATED",
+  "OBLIGATION_DECIDED",
+  "OBLIGATION_SUBMITTED",
 ]);
 
 export const incidentEvents = pgTable(
@@ -130,4 +136,70 @@ export const incidentEvents = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("incident_events_incident_idx").on(t.incidentId, t.createdAt)],
+);
+
+// ---------------------------------------------------------------------------
+// Phase 3 : gouvernance
+// ---------------------------------------------------------------------------
+
+/** Référentiel de contrôles (ISO 27001:2022 annexe A). Libellés reformulés : le texte de la norme est payant. */
+export const controls = pgTable(
+  "controls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    framework: text("framework").notNull(),
+    code: text("code").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+  },
+  (t) => [unique("controls_framework_code_uq").on(t.framework, t.code)],
+);
+
+export const incidentControls = pgTable(
+  "incident_controls",
+  {
+    incidentId: uuid("incident_id")
+      .notNull()
+      .references(() => incidents.id, { onDelete: "cascade" }),
+    controlId: uuid("control_id")
+      .notNull()
+      .references(() => controls.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.incidentId, t.controlId] })],
+);
+
+/** Obligations réglementaires déclenchées par un incident. */
+export const obligationKindEnum = pgEnum("obligation_kind", [
+  "GDPR_NOTIFICATION", // RGPD art. 33 : CNIL sous 72 h
+  "NIS2_EARLY_WARNING", // NIS2 art. 23(4)(a) : alerte précoce sous 24 h
+  "NIS2_NOTIFICATION", // NIS2 art. 23(4)(b) : notification sous 72 h
+  "NIS2_FINAL_REPORT", // NIS2 art. 23(4)(d) : rapport final 1 mois après la notification
+]);
+export type ObligationKind = (typeof obligationKindEnum.enumValues)[number];
+
+export const obligationDecisionEnum = pgEnum("obligation_decision", ["PENDING", "NOTIFY", "NOT_REQUIRED"]);
+export type ObligationDecision = (typeof obligationDecisionEnum.enumValues)[number];
+
+export const obligations = pgTable(
+  "obligations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    incidentId: uuid("incident_id")
+      .notNull()
+      .references(() => incidents.id, { onDelete: "cascade" }),
+    kind: obligationKindEnum("kind").notNull(),
+    /** Moment où l'organisation a pris connaissance du fait déclencheur : départ du compte à rebours. */
+    awareAt: timestamp("aware_at", { withTimezone: true }).notNull(),
+    decision: obligationDecisionEnum("decision").notNull().default("PENDING"),
+    justification: text("justification"),
+    decidedById: uuid("decided_by_id").references(() => users.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    submittedById: uuid("submitted_by_id").references(() => users.id, { onDelete: "set null" }),
+    /** Numéro de dossier renvoyé par l'autorité (téléservice CNIL, portail CSIRT…). */
+    reference: text("reference"),
+    /** Motif du retard si l'envoi dépasse l'échéance (exigé par le RGPD, art. 33.1). */
+    delayReason: text("delay_reason"),
+  },
+  (t) => [unique("obligations_incident_kind_uq").on(t.incidentId, t.kind)],
 );

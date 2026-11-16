@@ -45,7 +45,18 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 | POST | `/api/incidents/:id/comments` | ANALYST, CISO, DPO\*, ADMIN | Commenter |
 | POST | `/api/incidents/:id/alerts` | ANALYST, CISO, ADMIN | Rattacher des alertes |
 
+| GET | `/api/controls` | ANALYST, CISO, DPO, ADMIN | Référentiel de contrôles (ISO 27001:2022, sélection) |
+| POST | `/api/controls` | ADMIN | Ajouter un contrôle au référentiel |
+| PUT | `/api/incidents/:id/controls` | ANALYST, CISO, ADMIN | Rattacher des contrôles à un incident |
+| GET | `/api/incidents/:id/obligations` | ANALYST, CISO, DPO\*\*, ADMIN | Obligations réglementaires et comptes à rebours |
+| GET | `/api/obligations/upcoming` | CISO, DPO\*\*, ADMIN | Toutes les échéances en cours, de la plus urgente à la moins urgente |
+| POST | `/api/incidents/:id/obligations/:kind/decision` | DPO (RGPD), CISO, ADMIN | Notifier / non requise (justification obligatoire) |
+| GET | `/api/incidents/:id/obligations/:kind/draft` | DPO (RGPD), CISO, ADMIN | Brouillon de notification prérempli |
+| POST | `/api/incidents/:id/obligations/:kind/submission` | DPO (RGPD), CISO, ADMIN | Déclarer l'envoi (n° de dossier, motif si retard) |
+| GET | `/api/register?format=json\|csv` | CISO, DPO\*, ADMIN | Registre des incidents (preuve d'audit) |
+
 \* Le DPO ne voit que les incidents qui touchent des données personnelles.
+\*\* Le DPO ne voit que les obligations RGPD.
 
 ## Incidents
 
@@ -54,6 +65,23 @@ npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 **Alertes** : une alerte `HIGH` ou `CRITICAL` ouvre automatiquement un incident ; une alerte semblable (même source, même règle, même machine) est regroupée dans l'incident encore ouvert ; les alertes `LOW` et `MEDIUM` vont dans la file d'attente. La même alerte reçue deux fois n'est enregistrée qu'une fois. Sévérité Wazuh : niveau 0-6 → LOW, 7-10 → MEDIUM, 11-13 → HIGH, 14-15 → CRITICAL.
 
 **Chronologie** : chaque création, changement de statut, de sévérité, assignation, rattachement d'alerte et commentaire est horodaté et attribué.
+
+## Gouvernance
+
+**Contrôles ISO 27001** : 18 mesures de l'annexe A utiles pour qualifier un incident (libellés reformulés — le texte de la norme est payant) ; un admin peut en ajouter.
+
+**Obligations réglementaires**, déclenchées automatiquement par les indicateurs de l'incident :
+
+| Indicateur | Obligation | Autorité | Échéance |
+|---|---|---|---|
+| `personalData` | Notification de violation (RGPD art. 33) | CNIL | 72 h après la prise de connaissance |
+| `nis2Significant` | Alerte précoce (NIS2 art. 23(4)(a)) | CSIRT / ANSSI | 24 h |
+| `nis2Significant` | Notification d'incident (art. 23(4)(b)) | CSIRT / ANSSI | 72 h |
+| `nis2Significant` | Rapport final (art. 23(4)(d)) | CSIRT / ANSSI | 1 mois après la notification |
+
+Le compte à rebours démarre quand l'indicateur est coché. Statuts : `PENDING`, `OVERDUE`, `SUBMITTED`, `SUBMITTED_LATE`, `NOT_REQUIRED`. Ne pas notifier la CNIL exige une justification (elle figure au registre, RGPD art. 33.5) ; un envoi en retard exige le motif du retard (art. 33.1). Les brouillons sont préremplis avec l'incident, le DPO, les mesures prises et les contrôles ; les champs inconnus sont marqués `[à compléter]`. L'envoi lui-même se fait sur le téléservice de l'autorité : Vigie trace la date et le numéro de dossier.
+
+**Registre** : export JSON ou CSV (séparateur `;`, compatible Excel), protégé contre l'injection de formules.
 
 Tester le webhook depuis PowerShell (la clé est dans ton `.env`) :
 

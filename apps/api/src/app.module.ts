@@ -5,6 +5,7 @@ import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
 import { ENV, Env } from "./config/env";
 import { DbModule } from "./db/db.module";
+import { GovernanceModule } from "./governance/governance.module";
 import { HealthController } from "./health/health.controller";
 import { IncidentsModule } from "./incidents/incidents.module";
 import { UsersModule } from "./users/users.module";
@@ -20,6 +21,7 @@ export function createAppModule(env: Env) {
       AuthModule,
       UsersModule,
       IncidentsModule,
+      GovernanceModule,
     ],
     controllers: [HealthController],
     providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

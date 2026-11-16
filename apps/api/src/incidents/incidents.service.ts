@@ -3,7 +3,8 @@ import { and, asc, desc, eq, inArray, isNull, notInArray, SQL } from "drizzle-or
 import { AuditService } from "../audit/audit.service";
 import type { AuthUser } from "../auth/decorators";
 import { DB, Database } from "../db/db.module";
-import { alerts, incidentEvents, incidents, users, type Severity } from "../db/schema";
+import { alerts, controls, incidentControls, incidentEvents, incidents, users, type Severity } from "../db/schema";
+import { syncObligations } from "../governance/obligation-sync";
 import { CreateIncidentDto, ListIncidentsQuery, UpdateIncidentDto } from "./dto/incident.dto";
 import { allowedTransitions, canTransition, formatIncidentRef, RESPONDER_ROLES } from "./incident-rules";
 
@@ -82,8 +83,16 @@ export class IncidentsService {
       .where(eq(incidentEvents.incidentId, id))
       .orderBy(asc(incidentEvents.createdAt));
 
+    const linkedControls = await this.db
+      .select({ id: controls.id, framework: controls.framework, code: controls.code, title: controls.title })
+      .from(incidentControls)
+      .innerJoin(controls, eq(controls.id, incidentControls.controlId))
+      .where(eq(incidentControls.incidentId, id))
+      .orderBy(asc(controls.code));
+
     return {
       ...this.present(incident, assignee?.fullName ?? null),
+      controls: linkedControls,
       allowedTransitions: allowedTransitions(incident.status, user.role),
       alerts: linkedAlerts,
       timeline: timeline.map((e) => ({ ...e, actorName: e.actorName ?? "Système" })),
@@ -101,10 +110,12 @@ export class IncidentsService {
           description: dto.description,
           severity: dto.severity,
           personalData: dto.personalData ?? false,
+          nis2Significant: dto.nis2Significant ?? false,
           createdById: actor.id,
         })
         .returning();
       await this.event(tx, incident.id, actor.id, "CREATED", { severity: incident.severity });
+      await syncObligations(tx, incident.id, incident);
       if (dto.alertIds?.length) await this.attachAlerts(tx, incident.id, dto.alertIds, actor.id);
       return incident;
     });
@@ -198,6 +209,11 @@ export class IncidentsService {
       events.push(["PERSONAL_DATA_CHANGED", { to: dto.personalData }]);
     }
 
+    if (dto.nis2Significant !== undefined && dto.nis2Significant !== incident.nis2Significant) {
+      changes.nis2Significant = dto.nis2Significant;
+      events.push(["NIS2_CHANGED", { to: dto.nis2Significant }]);
+    }
+
     if (events.length === 0) return this.get(id, actor);
 
     await this.db.transaction(async (tx) => {
@@ -206,6 +222,11 @@ export class IncidentsService {
         .set({ ...changes, updatedAt: new Date() })
         .where(eq(incidents.id, id));
       for (const [type, data] of events) await this.event(tx, id, actor.id, type, data);
+      // Démarre (ou annule) les comptes à rebours réglementaires si un indicateur a changé.
+      await syncObligations(tx, id, {
+        personalData: changes.personalData ?? incident.personalData,
+        nis2Significant: changes.nis2Significant ?? incident.nis2Significant,
+      });
     });
     await this.audit.log({
       action: "INCIDENT_UPDATED",

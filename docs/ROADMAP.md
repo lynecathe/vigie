@@ -40,12 +40,13 @@ Chaque case peut devenir une *issue* GitHub.
 - [ ] Brancher un vrai Wazuh (homelab)
 
 ## Phase 3 — Gouvernance et conformité (semaines 6-7)
-- [ ] Référentiel de contrôles ISO 27001:2022 (numéros + résumés rédigés par toi)
-- [ ] Rattacher un incident à un ou plusieurs contrôles
-- [ ] Case « données personnelles concernées » → compte à rebours de 72 h pour la notification CNIL (art. 33 RGPD)
-- [ ] Case « entité NIS2 » → échéances : alerte précoce 24 h, notification 72 h, rapport final 1 mois
-- [ ] Brouillon de notification prérempli à partir de l'incident
-- [ ] Registre des incidents exportable (CSV / PDF)
+- [x] Référentiel de contrôles ISO 27001:2022 (18 mesures, libellés reformulés) + ajout par l'admin
+- [x] Rattacher un incident à un ou plusieurs contrôles
+- [x] Case « données personnelles concernées » → compte à rebours de 72 h pour la notification CNIL (art. 33 RGPD)
+- [x] Case « incident NIS2 important » → échéances : alerte précoce 24 h, notification 72 h, rapport final 1 mois
+- [x] Décision « notifier / non requise » (justification obligatoire), motif obligatoire en cas de retard
+- [x] Brouillon de notification prérempli à partir de l'incident (CNIL + 3 étapes NIS2)
+- [x] Registre des incidents exportable (JSON / CSV, protégé contre l'injection de formules)
 
 ## Phase 4 — Tableaux de bord et rapports (semaine 8)
 - [ ] Indicateurs : MTTA (délai de prise en charge), MTTR (délai de résolution)
