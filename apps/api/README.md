@@ -4,14 +4,23 @@ API REST de Vigie : NestJS, PostgreSQL (via Drizzle ORM), authentification JWT e
 
 ## Lancer en local
 
-Depuis la racine du dépôt :
+**Le plus simple (Windows)** : lance Docker Desktop, puis depuis la racine du dépôt :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup-local.ps1   # .env, base, tables, compte admin
+npm run dev -w @vigie/api                                          # API sur http://localhost:3000/api
+```
+
+Le script génère des secrets aléatoires et demande le mot de passe admin au clavier (il n'est jamais écrit dans un fichier).
+
+**À la main** (toutes plateformes), depuis la racine du dépôt :
 
 ```bash
 cp .env.example .env          # puis remplis JWT_ACCESS_SECRET et les mots de passe
 docker compose up -d          # démarre PostgreSQL
 npm install
 npm run db:migrate -w @vigie/api   # crée les tables
-npm run db:seed -w @vigie/api      # crée le premier administrateur
+SEED_ADMIN_PASSWORD=... npm run db:seed -w @vigie/api   # crée le premier administrateur
 npm run dev -w @vigie/api          # API sur http://localhost:3000/api
 ```
 
