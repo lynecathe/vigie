@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable } from "@nestjs/common";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
 import { hashPassword } from "../auth/password";
 import { DB, Database } from "../db/db.module";
@@ -24,6 +24,15 @@ export class UsersService {
 
   list() {
     return this.db.select(publicFields).from(users).orderBy(asc(users.createdAt));
+  }
+
+  /** Personnes à qui on peut assigner un incident (analystes, RSSI, admins actifs). */
+  listAssignable() {
+    return this.db
+      .select({ id: users.id, fullName: users.fullName, role: users.role })
+      .from(users)
+      .where(and(inArray(users.role, ["ANALYST", "CISO", "ADMIN"]), isNull(users.disabledAt)))
+      .orderBy(asc(users.fullName));
   }
 
   async create(dto: CreateUserDto, actorId: string, ip?: string) {

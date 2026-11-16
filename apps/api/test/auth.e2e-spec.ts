@@ -3,14 +3,9 @@
  * connexion, profil, contrôle des rôles, rotation des refresh tokens, déconnexion.
  * Lancement : npm run test:e2e (après db:migrate et db:seed).
  */
-import "reflect-metadata";
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { createAppModule } from "../src/app.module";
-import { loadEnv } from "../src/config/env";
-
-const ADMIN = { email: process.env.SEED_ADMIN_EMAIL!, password: process.env.SEED_ADMIN_PASSWORD! };
+import { ADMIN, startApp } from "./helpers";
 const ANALYST = {
   email: `analyste-${Date.now()}@exemple.fr`,
   fullName: "Ana Lyste",
@@ -23,12 +18,7 @@ describe("Authentification (e2e)", () => {
   let http: ReturnType<typeof request>;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [createAppModule(loadEnv())] }).compile();
-    app = moduleRef.createNestApplication();
-    app.setGlobalPrefix("api");
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-    await app.init();
-    http = request(app.getHttpServer());
+    ({ app, http } = await startApp());
   });
 
   afterAll(async () => {
